@@ -3,7 +3,7 @@ require "domain/meld"
 
 class Hand
   def initialize(cards = [])
-    @cards = cards
+    @cards = cards.dup
   end
 
   def add(card)
@@ -18,12 +18,21 @@ class Hand
     @cards.delete_at(index) if index
   end
 
+  def play_meld(meld)
+    raise ArgumentError, "Invalid meld" unless meld.valid?
+
+    meld.cards.each { |card| remove(card) }
+
+    meld
+  end
+
   def melds
     results = []
 
     (3..@cards.size).each do |size|
       @cards.combination(size).each do |combo|
-        results << combo if Meld.new(combo).valid?
+        meld = Meld.new(combo)
+        results << meld if meld.valid?
       end
     end
 

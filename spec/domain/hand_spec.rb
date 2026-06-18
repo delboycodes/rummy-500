@@ -41,6 +41,38 @@ RSpec.describe Hand do
     end
   end
 
+  describe "#play_meld" do
+    it "removes meld cards from hand" do
+      hand = Hand.new([
+        card("7", "♠"),
+        card("7", "♥"),
+        card("7", "♦")
+      ])
+
+      meld = Meld.new(hand.cards)
+
+      hand.play_meld(meld)
+
+      expect(hand).to be_empty
+    end
+
+    it "raises error for invalid meld" do
+      hand = Hand.new([
+        card("7", "♠"),
+        card("8", "♥"),
+        card("9", "♦")
+      ])
+
+      meld = Meld.new(hand.cards)
+
+      expect(meld.valid?).to be false
+
+      expect {
+        hand.play_meld(meld)
+      }.to raise_error(ArgumentError)
+    end
+  end
+
   describe "#melds" do
     it "finds a 3-of-a-kind set" do
       hand.add(card("7", "♠"))
