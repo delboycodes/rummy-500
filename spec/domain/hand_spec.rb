@@ -31,5 +31,50 @@ RSpec.describe Hand do
 
       expect(hand_with_card).to be_empty
     end
+
+    it "does nothing if card is not found" do
+      hand_with_card = Hand.new([card("A", "♠")])
+
+      hand_with_card.remove(card("K", "♦"))
+
+      expect(hand_with_card.size).to eq(1)
+    end
+  end
+
+  describe "#melds" do
+    it "finds a 3-of-a-kind set" do
+      hand.add(card("7", "♠"))
+      hand.add(card("7", "♥"))
+      hand.add(card("7", "♦"))
+
+      expect(hand.melds.size).to eq(1)
+    end
+
+    it "finds a run" do
+      hand.add(card("4", "♠"))
+      hand.add(card("5", "♠"))
+      hand.add(card("6", "♠"))
+
+      expect(hand.melds.size).to eq(1)
+    end
+
+    it "returns empty when no melds exist" do
+      hand.add(card("2", "♠"))
+      hand.add(card("5", "♦"))
+      hand.add(card("9", "♥"))
+
+      expect(hand.melds).to be_empty
+    end
+  end
+
+  describe "#cards" do
+    it "returns a copy of cards" do
+      hand.add(card("A", "♠"))
+
+      external = hand.cards
+      external << card("K", "♦")
+
+      expect(hand.size).to eq(1)
+    end
   end
 end
