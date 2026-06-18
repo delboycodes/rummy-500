@@ -46,10 +46,8 @@ RSpec.describe Table do
       meld = valid_set_meld
       table.add_meld(meld)
 
-      # mutate original meld object after storing
       meld.cards << card("7", "♣")
 
-      # table should not be affected
       expect(table.melds.first.cards.size).to eq(3)
     end
   end
