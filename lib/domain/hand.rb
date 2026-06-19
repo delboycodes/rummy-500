@@ -18,6 +18,12 @@ class Hand
     @cards.delete_at(index) if index
   end
 
+  def remove_cards(cards)
+    cards.each do |card|
+      @cards.delete(card)
+    end
+  end
+
   def play_meld(meld)
     raise ArgumentError, "Invalid meld" unless meld.valid?
 

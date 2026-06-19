@@ -41,6 +41,31 @@ RSpec.describe Hand do
     end
   end
 
+  describe "#remove_cards" do
+    let(:hand) { Hand.new }
+
+    let(:five_spades) { Card.new("5", "♠") }
+    let(:five_hearts) { Card.new("5", "♥") }
+    let(:five_diamonds) { Card.new("5", "♦") }
+
+    before do
+      hand.add(five_spades)
+      hand.add(five_hearts)
+      hand.add(five_diamonds)
+    end
+
+    it "removes multiple cards" do
+      hand.remove_cards([
+        five_spades,
+        five_hearts
+      ])
+
+      expect(hand.cards).to contain_exactly(
+        five_diamonds
+      )
+    end
+  end
+
   describe "#play_meld" do
     it "removes meld cards from hand" do
       hand = Hand.new([
