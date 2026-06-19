@@ -20,6 +20,10 @@ class Hand
 
   def remove_cards(cards)
     cards.each do |card|
+      raise ArgumentError, "Card not in hand" unless @cards.include?(card)
+    end
+
+    cards.each do |card|
       @cards.delete(card)
     end
   end

@@ -64,6 +64,19 @@ RSpec.describe Hand do
         five_diamonds
       )
     end
+
+    it "raises when a card is missing" do
+      hand = Hand.new
+
+      card = Card.new("5", "♠")
+
+      expect {
+        hand.remove_cards([card])
+      }.to raise_error(
+        ArgumentError,
+        "Card not in hand"
+      )
+    end
   end
 
   describe "#play_meld" do
