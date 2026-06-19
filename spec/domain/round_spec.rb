@@ -88,6 +88,65 @@ RSpec.describe Round do
     end
   end
 
+  describe "#play_meld" do
+    let(:round) { started_round }
+
+    let(:meld_cards) do
+      [
+        Card.new("7", "♠"),
+        Card.new("7", "♥"),
+        Card.new("7", "♦")
+      ]
+    end
+
+    before do
+      meld_cards.each do |card|
+        round.current_player.hand.add(card)
+      end
+    end
+
+    it "adds a meld to the table" do
+      expect {
+        round.play_meld(meld_cards)
+      }.to change { round.table.size }.by(1)
+    end
+
+    it "removes melded cards from the current player's hand" do
+      round.play_meld(meld_cards)
+
+      meld_cards.each do |card|
+        expect(round.current_player.hand.cards)
+          .not_to include(card)
+      end
+    end
+
+    it "stores the meld on the table" do
+      round.play_meld(meld_cards)
+
+      expect(round.table.melds.first.cards)
+        .to contain_exactly(*meld_cards)
+    end
+
+    it "rejects invalid melds" do
+      invalid_cards = [
+        Card.new("7", "♠"),
+        Card.new("8", "♥"),
+        Card.new("9", "♦")
+      ]
+
+      invalid_cards.each do |card|
+        round.current_player.hand.add(card)
+      end
+
+      expect {
+        round.play_meld(invalid_cards)
+      }.to raise_error(
+        ArgumentError,
+        "Invalid meld"
+      )
+    end
+  end
+
   describe "player rules" do
     it "rejects < 2 players" do
       expect {

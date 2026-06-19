@@ -1,6 +1,7 @@
 require "domain/deck"
 require "domain/table"
 require "domain/turn"
+require "domain/meld"
 
 class Round
   attr_reader :players, :deck, :table, :discard_pile
@@ -32,6 +33,16 @@ class Round
 
   def end_turn
     players.rotate!
+  end
+
+  def play_meld(cards)
+    meld = Meld.new(cards)
+
+    raise ArgumentError, "Invalid meld" unless meld.valid?
+
+    current_player.hand.remove_cards(cards)
+
+    table.add_meld(meld)
   end
 
   private
