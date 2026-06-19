@@ -9,12 +9,17 @@ RSpec.describe Turn do
   let(:discard_pile) { [card] }
 
   describe "#initialize" do
-    it "sets initial state correctly" do
+    it "assigns dependencies" do
       turn = Turn.new(player: player, deck: deck, discard_pile: discard_pile)
 
       expect(turn.player).to eq(player)
       expect(turn.deck).to eq(deck)
       expect(turn.discard_pile).to eq(discard_pile)
+    end
+
+    it "starts in un-drawn state" do
+      turn = Turn.new(player: player, deck: deck, discard_pile: discard_pile)
+
       expect(turn.drawn?).to eq(false)
     end
   end
