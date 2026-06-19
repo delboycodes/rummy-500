@@ -21,6 +21,22 @@ class Round
     players.first
   end
 
+  def draw_from_deck
+    deck.draw
+  end
+
+  def draw_from_discard
+    discard_pile.pop
+  end
+
+  def discard(card)
+    discard_pile << card
+  end
+
+  def end_turn
+    players.rotate!
+  end
+
   private
 
   def validate_players!
