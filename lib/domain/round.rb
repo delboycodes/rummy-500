@@ -1,5 +1,6 @@
 require "domain/deck"
 require "domain/table"
+require "domain/turn"
 
 class Round
   attr_reader :players, :deck, :table, :discard_pile
@@ -21,16 +22,12 @@ class Round
     players.first
   end
 
-  def draw_from_deck
-    deck.draw
-  end
-
-  def draw_from_discard
-    discard_pile.pop
-  end
-
-  def discard(card)
-    discard_pile << card
+  def current_turn
+    Turn.new(
+      player: current_player,
+      deck: deck,
+      discard_pile: discard_pile
+    )
   end
 
   def end_turn

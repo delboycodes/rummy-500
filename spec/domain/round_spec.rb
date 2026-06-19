@@ -3,6 +3,7 @@ require "domain/player"
 require "domain/card"
 require "domain/deck"
 require "domain/table"
+require "domain/turn"
 
 RSpec.describe Round do
   def player(name)
@@ -76,42 +77,14 @@ RSpec.describe Round do
     end
   end
 
-  describe "#draw_from_deck" do
-    it "reduces deck size by 1" do
+  describe "#current_turn" do
+    it "builds a Turn object for current player" do
       round = started_round
 
-      expect {
-        round.draw_from_deck
-      }.to change { round.deck.size }.by(-1)
-    end
+      turn = round.current_turn
 
-    it "returns a card object" do
-      round = started_round
-
-      expect(round.draw_from_deck).to be_a(Card)
-    end
-  end
-
-  describe "#draw_from_discard" do
-    it "removes top discard" do
-      round = started_round
-
-      top = round.discard_pile.last
-
-      expect {
-        round.draw_from_discard
-      }.to change { round.discard_pile.size }.by(-1)
-    end
-  end
-
-  describe "#discard" do
-    it "adds card to discard pile" do
-      round = started_round
-      card = round.draw_from_deck
-
-      expect {
-        round.discard(card)
-      }.to change { round.discard_pile.size }.by(1)
+      expect(turn.player).to eq(players.first)
+      expect(turn).to be_a(Turn)
     end
   end
 
