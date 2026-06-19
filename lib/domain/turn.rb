@@ -14,14 +14,22 @@ class Turn
     ensure_not_drawn!
 
     @has_drawn = true
-    @deck.draw
+    card = @deck.draw
+
+    @player.hand.add(card)
+
+    card
   end
 
   def draw_from_discard
     ensure_not_drawn!
 
     @has_drawn = true
-    @discard_pile.pop
+    card = @discard_pile.pop
+
+    @player.hand.add(card)
+
+    card
   end
 
   def drawn?
