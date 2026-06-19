@@ -1,15 +1,26 @@
 class Card
   attr_reader :rank, :suit
 
+  FACE_CARDS = %w[J Q K].freeze
+
   def initialize(rank, suit)
     @rank = rank
     @suit = suit
   end
 
   def value
-    return 15 if rank == "A"
-    return 10 if ["J", "Q", "K"].include?(rank)
+    return 15 if ace?
+    return 10 if face_card?
+
     rank.to_i
+  end
+
+  def ace?
+    rank == "A"
+  end
+
+  def face_card?
+    FACE_CARDS.include?(rank)
   end
 
   def to_s
