@@ -2,6 +2,7 @@ require "domain/deck"
 require "domain/table"
 require "domain/turn"
 require "domain/meld"
+require "domain/errors"
 
 class Round
   attr_reader :players, :deck, :table, :discard_pile

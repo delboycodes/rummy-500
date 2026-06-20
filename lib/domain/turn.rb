@@ -1,3 +1,5 @@
+require "domain/errors"
+
 class Turn
   attr_reader :player, :deck, :discard_pile
 
@@ -11,7 +13,7 @@ class Turn
   end
 
   def draw_from_deck
-    ensure_not_drawn!
+    raise TurnError, "Already drawn" if @has_drawn
 
     card = @deck.draw
     @player.hand.add(card)
@@ -21,7 +23,7 @@ class Turn
   end
 
   def draw_from_discard
-    ensure_not_drawn!
+    raise TurnError, "Already drawn" if @has_drawn
 
     card = @discard_pile.pop
     @player.hand.add(card)
@@ -30,20 +32,20 @@ class Turn
     card
   end
 
-  def drawn?
-    @has_drawn
-  end
-
   def discard(card)
-    ensure_drawn!
-    ensure_not_discarded!
-    ensure_card_in_hand!(card)
+    raise TurnError, "Must draw first" unless @has_drawn
+    raise TurnError, "Already discarded" if @has_discarded
+    raise TurnError, "Card not in hand" unless @player.hand.cards.include?(card)
 
     @player.hand.remove_cards([card])
     @discard_pile << card
 
     @has_discarded = true
     true
+  end
+
+  def drawn?
+    @has_drawn
   end
 
   def discarded?
@@ -53,26 +55,4 @@ class Turn
   def complete?
     @has_drawn && @has_discarded
   end
-
-  private
-
-  def ensure_not_drawn!
-    raise TurnError, "Already drawn" if @has_drawn
-  end
-
-  def ensure_drawn!
-    raise TurnError, "Must draw first" unless @has_drawn
-  end
-
-  def ensure_not_discarded!
-    raise TurnError, "Already discarded" if @has_discarded
-  end
-
-  def ensure_card_in_hand!(card)
-    unless @player.hand.cards.include?(card)
-      raise TurnError, "Card not in hand"
-    end
-  end
 end
-
-class TurnError < StandardError; end
