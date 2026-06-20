@@ -29,10 +29,12 @@ class Round
   end
 
   def current_turn
-    @current_turn ||= build_turn
+    @current_turn
   end
 
   def end_turn
+    ensure_turn_complete!
+
     @current_index = (@current_index + 1) % players.size
     reset_turn!
   end
@@ -74,7 +76,11 @@ class Round
   def ensure_turn_drawn!
     raise TurnError, "Must draw first" unless current_turn.drawn?
   end
-  
+
+  def ensure_turn_complete!
+    raise TurnError, "Turn not complete" unless current_turn.complete?
+  end
+
   def validate_players!
     return if players.size.between?(2, 4)
 

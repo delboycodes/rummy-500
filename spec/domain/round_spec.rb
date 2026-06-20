@@ -68,8 +68,20 @@ RSpec.describe Round do
   end
 
   describe "#end_turn" do
-    it "rotates turn order deterministically" do
+    it "requires a completed turn before rotation" do
       round = started_round
+
+      expect {
+        round.end_turn
+      }.to raise_error(TurnError, "Turn not complete")
+    end
+
+    it "rotates turn after completion" do
+      round = started_round
+
+      round.current_turn.draw_from_deck
+      card = round.current_player.hand.cards.first
+      round.current_turn.discard(card)
 
       expect {
         round.end_turn
@@ -77,27 +89,10 @@ RSpec.describe Round do
         .from(players.first)
         .to(players.last)
     end
-
-    it "resets turn after completion" do
-      round = started_round
-
-      first_turn = round.current_turn
-      round.end_turn
-
-      expect(round.current_turn).not_to eq(first_turn)
-    end
-
-    it "assigns the new turn to the next player" do
-      round = started_round
-
-      round.end_turn
-
-      expect(round.current_turn.player).to eq(players.last)
-    end
   end
 
   describe "#current_turn" do
-    it "builds a Turn object for the current player" do
+    it "builds a Turn object for current player" do
       round = started_round
 
       expect(round.current_turn).to be_a(Turn)
@@ -138,12 +133,11 @@ RSpec.describe Round do
       }.to change { round.table.size }.by(1)
     end
 
-    it "removes melded cards from the current player's hand" do
+    it "removes melded cards from player's hand" do
       round.play_meld(meld_cards)
 
       meld_cards.each do |card|
-        expect(round.current_player.hand.cards)
-          .not_to include(card)
+        expect(round.current_player.hand.cards).not_to include(card)
       end
     end
 
@@ -167,10 +161,7 @@ RSpec.describe Round do
 
       expect {
         round.play_meld(invalid_cards)
-      }.to raise_error(
-        ArgumentError,
-        "Invalid meld"
-      )
+      }.to raise_error(ArgumentError, "Invalid meld")
     end
   end
 
@@ -198,7 +189,7 @@ RSpec.describe Round do
       round.current_player.hand.add(layoff_card)
     end
 
-    it "adds card to an existing meld via table" do
+    it "adds card to existing meld via table" do
       expect {
         round.layoff([layoff_card])
       }.to change { round.table.melds.first.cards.size }.by(1)
@@ -207,8 +198,7 @@ RSpec.describe Round do
     it "removes card from player's hand when successful" do
       round.layoff([layoff_card])
 
-      expect(round.current_player.hand.cards)
-        .not_to include(layoff_card)
+      expect(round.current_player.hand.cards).not_to include(layoff_card)
     end
 
     it "returns true when successful" do
@@ -244,6 +234,29 @@ RSpec.describe Round do
       expect {
         round.play_meld(meld_cards)
       }.to raise_error(TurnError, "Must draw first")
+    end
+  end
+
+  describe "turn flow completion" do
+    let(:round) { started_round }
+
+    it "requires discard before ending turn" do
+      round.current_turn.draw_from_deck
+
+      expect {
+        round.end_turn
+      }.to raise_error(TurnError, "Turn not complete")
+    end
+
+    it "allows ending turn after discard" do
+      round.current_turn.draw_from_deck
+
+      card = round.current_player.hand.cards.first
+      round.current_turn.discard(card)
+
+      expect {
+        round.end_turn
+      }.not_to raise_error
     end
   end
 

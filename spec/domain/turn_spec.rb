@@ -5,12 +5,25 @@ require "domain/card"
 RSpec.describe Turn do
   let(:player) { Player.new("Linnie") }
   let(:card) { Card.new("5", "♠") }
+
   let(:deck) { double("deck", draw: card) }
   let(:discard_pile) { [] }
-  let(:hand) { double("hand", add: nil) }
+
+  let(:hand) { instance_double("Hand") }
+  let(:hand_cards) { [] }
 
   before do
     allow(player).to receive(:hand).and_return(hand)
+
+    allow(hand).to receive(:add) do |c|
+      hand_cards << c
+    end
+
+    allow(hand).to receive(:remove_cards) do |cards|
+      cards.each { |c| hand_cards.delete(c) }
+    end
+
+    allow(hand).to receive(:cards).and_return(hand_cards)
   end
 
   describe "#initialize" do
@@ -52,7 +65,7 @@ RSpec.describe Turn do
   end
 
   describe "#draw_from_discard" do
-    it "draws from discard pile, adds to player's hand, and marks turn as drawn" do
+    it "draws from discard pile and adds it to player's hand" do
       discard_pile << card
 
       turn = Turn.new(player: player, deck: deck, discard_pile: discard_pile)
@@ -96,13 +109,14 @@ RSpec.describe Turn do
       }.to raise_error(TurnError, "Must draw first")
     end
 
-    it "adds card to discard pile" do
+    it "adds card to discard pile and removes it from hand" do
       turn = Turn.new(player: player, deck: deck, discard_pile: discard_pile)
 
       turn.draw_from_deck
       turn.discard(card)
 
       expect(discard_pile.last).to eq(card)
+      expect(hand).to have_received(:remove_cards).with([card])
     end
 
     it "prevents multiple discards" do
