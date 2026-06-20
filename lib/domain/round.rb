@@ -11,6 +11,8 @@ class Round
     @deck = deck
     @table = table
     @discard_pile = []
+
+    @current_index = 0
     @current_turn = nil
   end
 
@@ -23,7 +25,7 @@ class Round
   end
 
   def current_player
-    players.first
+    players[@current_index]
   end
 
   def current_turn
@@ -31,7 +33,7 @@ class Round
   end
 
   def end_turn
-    players.rotate!
+    @current_index = (@current_index + 1) % players.size
     @current_turn = build_turn
   end
 
