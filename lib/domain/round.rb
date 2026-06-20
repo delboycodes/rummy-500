@@ -11,12 +11,15 @@ class Round
     @deck = deck
     @table = table
     @discard_pile = []
+    @current_turn = nil
   end
 
   def start
     validate_players!
     deal_cards
     start_discard_pile
+
+    @current_turn = build_turn
   end
 
   def current_player
@@ -24,15 +27,12 @@ class Round
   end
 
   def current_turn
-    Turn.new(
-      player: current_player,
-      deck: deck,
-      discard_pile: discard_pile
-    )
+    @current_turn
   end
 
   def end_turn
     players.rotate!
+    @current_turn = build_turn
   end
 
   def play_meld(cards)
@@ -56,6 +56,14 @@ class Round
   end
 
   private
+
+  def build_turn
+    Turn.new(
+      player: current_player,
+      deck: deck,
+      discard_pile: discard_pile
+    )
+  end
 
   def validate_players!
     return if players.size.between?(2, 4)

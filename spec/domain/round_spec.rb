@@ -75,16 +75,49 @@ RSpec.describe Round do
         round.end_turn
       }.to change { round.current_player }.from(players.first).to(players.last)
     end
+
+    it "creates a new turn" do
+      round = started_round
+
+      first_turn = round.current_turn
+
+      round.end_turn
+
+      expect(round.current_turn).not_to equal(first_turn)
+    end
+
+    it "assigns the new turn to the next player" do
+      round = started_round
+
+      round.end_turn
+
+      expect(round.current_turn.player).to eq(players.last)
+    end
   end
 
   describe "#current_turn" do
-    it "builds a Turn object for current player" do
+    it "builds a Turn object for the current player" do
       round = started_round
 
-      turn = round.current_turn
+      expect(round.current_turn).to be_a(Turn)
+      expect(round.current_turn.player).to eq(players.first)
+    end
 
-      expect(turn.player).to eq(players.first)
-      expect(turn).to be_a(Turn)
+    it "returns the same turn instance until the turn ends" do
+      round = started_round
+
+      first_turn = round.current_turn
+      second_turn = round.current_turn
+
+      expect(first_turn).to equal(second_turn)
+    end
+
+    it "retains turn state" do
+      round = started_round
+
+      round.current_turn.draw_from_deck
+
+      expect(round.current_turn.drawn?).to eq(true)
     end
   end
 
