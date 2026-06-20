@@ -21,7 +21,7 @@ class Round
     deal_cards
     start_discard_pile
 
-    @current_turn = build_turn
+    reset_turn!
   end
 
   def current_player
@@ -29,23 +29,21 @@ class Round
   end
 
   def current_turn
-    @current_turn
+    @current_turn ||= build_turn
   end
 
   def end_turn
     @current_index = (@current_index + 1) % players.size
-    @current_turn = build_turn
+    reset_turn!
   end
 
   def play_meld(cards)
     ensure_turn_drawn!
 
     meld = Meld.new(cards)
-
     raise ArgumentError, "Invalid meld" unless meld.valid?
 
     current_player.hand.remove_cards(cards)
-
     table.add_meld(meld)
   end
 
@@ -53,11 +51,9 @@ class Round
     ensure_turn_drawn!
 
     success = table.layoff(cards)
-
     return false unless success
 
     current_player.hand.remove_cards(cards)
-
     true
   end
 
@@ -71,10 +67,14 @@ class Round
     )
   end
 
+  def reset_turn!
+    @current_turn = build_turn
+  end
+
   def ensure_turn_drawn!
     raise TurnError, "Must draw first" unless current_turn.drawn?
   end
-
+  
   def validate_players!
     return if players.size.between?(2, 4)
 

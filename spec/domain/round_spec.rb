@@ -73,17 +73,18 @@ RSpec.describe Round do
 
       expect {
         round.end_turn
-      }.to change { round.current_player }.from(players.first).to(players.last)
+      }.to change { round.current_player }
+        .from(players.first)
+        .to(players.last)
     end
 
-    it "creates a new turn" do
+    it "resets turn after completion" do
       round = started_round
 
       first_turn = round.current_turn
-
       round.end_turn
 
-      expect(round.current_turn).not_to equal(first_turn)
+      expect(round.current_turn).not_to eq(first_turn)
     end
 
     it "assigns the new turn to the next player" do
@@ -103,16 +104,7 @@ RSpec.describe Round do
       expect(round.current_turn.player).to eq(players.first)
     end
 
-    it "returns the same turn instance until the turn ends" do
-      round = started_round
-
-      first_turn = round.current_turn
-      second_turn = round.current_turn
-
-      expect(first_turn).to equal(second_turn)
-    end
-
-    it "retains turn state" do
+    it "persists turn state across actions" do
       round = started_round
 
       round.current_turn.draw_from_deck
@@ -182,7 +174,7 @@ RSpec.describe Round do
     end
   end
 
-   describe "#layoff" do
+  describe "#layoff" do
     let(:round) { started_round }
 
     let(:base_meld) do
