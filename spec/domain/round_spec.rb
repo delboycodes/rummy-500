@@ -147,6 +147,53 @@ RSpec.describe Round do
     end
   end
 
+   describe "#layoff" do
+    let(:round) { started_round }
+
+    let(:base_meld) do
+      [
+        Card.new("7", "♠"),
+        Card.new("7", "♥"),
+        Card.new("7", "♦")
+      ]
+    end
+
+    let(:layoff_card) { Card.new("7", "♣") }
+
+    before do
+      base_meld.each do |card|
+        round.current_player.hand.add(card)
+      end
+
+      round.play_meld(base_meld)
+      round.current_player.hand.add(layoff_card)
+    end
+
+    it "adds card to an existing meld via table" do
+      expect {
+        round.layoff([layoff_card])
+      }.to change { round.table.melds.first.cards.size }.by(1)
+    end
+
+    it "removes card from player's hand when successful" do
+      round.layoff([layoff_card])
+
+      expect(round.current_player.hand.cards)
+        .not_to include(layoff_card)
+    end
+
+    it "returns true when successful" do
+      expect(round.layoff([layoff_card])).to eq(true)
+    end
+
+    it "returns false when invalid" do
+      bad_card = Card.new("2", "♠")
+      round.current_player.hand.add(bad_card)
+
+      expect(round.layoff([bad_card])).to eq(false)
+    end
+  end
+
   describe "player rules" do
     it "rejects < 2 players" do
       expect {

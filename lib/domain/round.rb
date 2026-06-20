@@ -45,6 +45,16 @@ class Round
     table.add_meld(meld)
   end
 
+  def layoff(cards)
+    success = table.layoff(cards)
+
+    return false unless success
+
+    current_player.hand.remove_cards(cards)
+
+    true
+  end
+
   private
 
   def validate_players!
