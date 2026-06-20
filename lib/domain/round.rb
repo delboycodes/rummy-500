@@ -38,6 +38,8 @@ class Round
   end
 
   def play_meld(cards)
+    ensure_turn_drawn!
+
     meld = Meld.new(cards)
 
     raise ArgumentError, "Invalid meld" unless meld.valid?
@@ -48,6 +50,8 @@ class Round
   end
 
   def layoff(cards)
+    ensure_turn_drawn!
+
     success = table.layoff(cards)
 
     return false unless success
@@ -65,6 +69,10 @@ class Round
       deck: deck,
       discard_pile: discard_pile
     )
+  end
+
+  def ensure_turn_drawn!
+    raise TurnError, "Must draw first" unless current_turn.drawn?
   end
 
   def validate_players!

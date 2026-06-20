@@ -133,6 +133,8 @@ RSpec.describe Round do
     end
 
     before do
+      round.current_turn.draw_from_deck
+
       meld_cards.each do |card|
         round.current_player.hand.add(card)
       end
@@ -194,6 +196,8 @@ RSpec.describe Round do
     let(:layoff_card) { Card.new("7", "♣") }
 
     before do
+      round.current_turn.draw_from_deck
+
       base_meld.each do |card|
         round.current_player.hand.add(card)
       end
@@ -224,6 +228,30 @@ RSpec.describe Round do
       round.current_player.hand.add(bad_card)
 
       expect(round.layoff([bad_card])).to eq(false)
+    end
+  end
+
+  describe "turn flow" do
+    let(:round) { started_round }
+
+    let(:meld_cards) do
+      [
+        Card.new("7", "♠"),
+        Card.new("7", "♥"),
+        Card.new("7", "♦")
+      ]
+    end
+
+    before do
+      meld_cards.each do |card|
+        round.current_player.hand.add(card)
+      end
+    end
+
+    it "does not allow melding before drawing" do
+      expect {
+        round.play_meld(meld_cards)
+      }.to raise_error(TurnError, "Must draw first")
     end
   end
 
