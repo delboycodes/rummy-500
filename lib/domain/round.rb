@@ -1,6 +1,7 @@
 require "domain/deck"
 require "domain/table"
 require "domain/turn"
+require "domain/turn_state"
 require "domain/meld"
 require "domain/errors"
 
@@ -21,8 +22,8 @@ class Round
     validate_players!
     deal_cards
     start_discard_pile
-
-    reset_turn!
+    start_turn
+    self
   end
 
   def current_player
@@ -37,21 +38,22 @@ class Round
     ensure_turn_complete!
 
     @current_index = (@current_index + 1) % players.size
-    reset_turn!
+    start_turn
   end
 
   def play_meld(cards)
-    ensure_turn_drawn!
+    raise TurnError, "Must draw first" unless current_turn&.drawn?
 
     meld = Meld.new(cards)
     raise ArgumentError, "Invalid meld" unless meld.valid?
 
     current_player.hand.remove_cards(cards)
     table.add_meld(meld)
+    meld
   end
 
   def layoff(cards)
-    ensure_turn_drawn!
+    raise TurnError, "Must draw first" unless current_turn&.drawn?
 
     success = table.layoff(cards)
     return false unless success
@@ -62,20 +64,12 @@ class Round
 
   private
 
-  def build_turn
-    Turn.new(
+  def start_turn
+    @current_turn = Turn.new(
       player: current_player,
       deck: deck,
       discard_pile: discard_pile
     )
-  end
-
-  def reset_turn!
-    @current_turn = build_turn
-  end
-
-  def ensure_turn_drawn!
-    raise TurnError, "Must draw first" unless current_turn.drawn?
   end
 
   def ensure_turn_complete!
@@ -84,7 +78,6 @@ class Round
 
   def validate_players!
     return if players.size.between?(2, 4)
-
     raise ArgumentError, "Rummy 500 requires 2 to 4 players"
   end
 

@@ -1,58 +1,50 @@
 require "domain/errors"
+require "domain/turn_state"
 
 class Turn
-  attr_reader :player, :deck, :discard_pile
+  attr_reader :player, :deck, :discard_pile, :state
 
-  def initialize(player:, deck:, discard_pile:)
+  def initialize(player:, deck:, discard_pile:, state: TurnState.new)
     @player = player
     @deck = deck
     @discard_pile = discard_pile
+    @state = state
+  end
 
-    @has_drawn = false
-    @has_discarded = false
+  def drawn?
+    state.drawn?
   end
 
   def draw_from_deck
-    raise TurnError, "Already drawn" if @has_drawn
+    raise TurnError, "Already drawn" if state.drawn?
 
-    card = @deck.draw
-    @player.hand.add(card)
-
-    @has_drawn = true
+    card = deck.draw
+    player.hand.add(card)
+    state.mark_drawn!
     card
   end
 
   def draw_from_discard
-    raise TurnError, "Already drawn" if @has_drawn
+    raise TurnError, "Already drawn" if state.drawn?
+    raise TurnError, "Discard pile empty" if discard_pile.empty?
 
-    card = @discard_pile.pop
-    @player.hand.add(card)
-
-    @has_drawn = true
+    card = discard_pile.pop
+    player.hand.add(card)
+    state.mark_drawn!
     card
   end
 
   def discard(card)
-    raise TurnError, "Must draw first" unless @has_drawn
-    raise TurnError, "Already discarded" if @has_discarded
-    raise TurnError, "Card not in hand" unless @player.hand.cards.include?(card)
+    raise TurnError, "Must draw first" unless state.drawn?
+    raise TurnError, "Already discarded" if state.discarded?
 
-    @player.hand.remove_cards([card])
-    @discard_pile << card
-
-    @has_discarded = true
-    true
-  end
-
-  def drawn?
-    @has_drawn
-  end
-
-  def discarded?
-    @has_discarded
+    player.hand.remove_cards([card])
+    discard_pile << card
+    state.mark_discarded!
+    card
   end
 
   def complete?
-    @has_drawn && @has_discarded
+    state.complete?
   end
 end
