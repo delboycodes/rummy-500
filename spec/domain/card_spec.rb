@@ -10,6 +10,26 @@ RSpec.describe Card do
     end
   end
 
+  describe "#==" do
+    it "returns true for cards with identical rank and suit" do
+      card1 = Card.new("10", "♠")
+      card2 = Card.new("10", "♠")
+      expect(card1).to eq(card2)
+    end
+
+    it "returns false for different ranks" do
+      card1 = Card.new("10", "♠")
+      card2 = Card.new("J", "♠")
+      expect(card1).not_to eq(card2)
+    end
+
+    it "returns false for different suits" do
+      card1 = Card.new("10", "♠")
+      card2 = Card.new("10", "♥")
+      expect(card1).not_to eq(card2)
+    end
+  end
+
   describe "#value" do
     it "returns 15 for an Ace" do
       expect(Card.new("A", "♠").value).to eq(15)

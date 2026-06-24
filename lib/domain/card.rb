@@ -8,6 +8,15 @@ class Card
     @suit = suit
   end
 
+  def ==(other)
+    other.is_a?(Card) && rank == other.rank && suit == other.suit
+  end
+  alias_method :eql?, :==
+
+  def hash
+    [rank, suit].hash
+  end
+
   def value
     return 15 if ace?
     return 10 if face_card?
