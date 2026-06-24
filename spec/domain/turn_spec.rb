@@ -1,34 +1,28 @@
 require "domain/turn"
 require "domain/player"
 require "domain/card"
+require "domain/turn_state"
 
 RSpec.describe Turn do
   let(:player) { Player.new("Linnie") }
   let(:card) { Card.new("5", "♠") }
-
   let(:deck) { double("deck", draw: card) }
   let(:discard_pile) { [] }
-
   let(:hand) { instance_double("Hand") }
   let(:hand_cards) { [] }
+  let(:state) { TurnState.new }
 
   before do
     allow(player).to receive(:hand).and_return(hand)
 
-    allow(hand).to receive(:add) do |c|
-      hand_cards << c
-    end
-
-    allow(hand).to receive(:remove_cards) do |cards|
-      cards.each { |c| hand_cards.delete(c) }
-    end
-
+    allow(hand).to receive(:add) { |c| hand_cards << c }
+    allow(hand).to receive(:remove_cards) { |cards| cards.each { |c| hand_cards.delete(c) } }
     allow(hand).to receive(:cards).and_return(hand_cards)
   end
 
   describe "#initialize" do
     it "assigns dependencies" do
-      turn = Turn.new(player: player, deck: deck, discard_pile: discard_pile)
+      turn = Turn.new(player: player, deck: deck, discard_pile: discard_pile, state: state)
 
       expect(turn.player).to eq(player)
       expect(turn.deck).to eq(deck)
@@ -36,7 +30,7 @@ RSpec.describe Turn do
     end
 
     it "starts in un-drawn state" do
-      turn = Turn.new(player: player, deck: deck, discard_pile: discard_pile)
+      turn = Turn.new(player: player, deck: deck, discard_pile: discard_pile, state: state)
 
       expect(turn.drawn?).to eq(false)
     end
@@ -44,7 +38,7 @@ RSpec.describe Turn do
 
   describe "#draw_from_deck" do
     it "draws a card, adds it to player's hand, and marks turn as drawn" do
-      turn = Turn.new(player: player, deck: deck, discard_pile: discard_pile)
+      turn = Turn.new(player: player, deck: deck, discard_pile: discard_pile, state: state)
 
       result = turn.draw_from_deck
 
@@ -54,7 +48,7 @@ RSpec.describe Turn do
     end
 
     it "prevents drawing twice" do
-      turn = Turn.new(player: player, deck: deck, discard_pile: discard_pile)
+      turn = Turn.new(player: player, deck: deck, discard_pile: discard_pile, state: state)
 
       turn.draw_from_deck
 
@@ -67,8 +61,7 @@ RSpec.describe Turn do
   describe "#draw_from_discard" do
     it "draws from discard pile and adds it to player's hand" do
       discard_pile << card
-
-      turn = Turn.new(player: player, deck: deck, discard_pile: discard_pile)
+      turn = Turn.new(player: player, deck: deck, discard_pile: discard_pile, state: state)
 
       result = turn.draw_from_discard
 
@@ -79,8 +72,7 @@ RSpec.describe Turn do
 
     it "removes card from discard pile" do
       discard_pile << card
-
-      turn = Turn.new(player: player, deck: deck, discard_pile: discard_pile)
+      turn = Turn.new(player: player, deck: deck, discard_pile: discard_pile, state: state)
 
       turn.draw_from_discard
 
@@ -89,8 +81,7 @@ RSpec.describe Turn do
 
     it "prevents drawing after already drawn" do
       discard_pile << card
-
-      turn = Turn.new(player: player, deck: deck, discard_pile: discard_pile)
+      turn = Turn.new(player: player, deck: deck, discard_pile: discard_pile, state: state)
 
       turn.draw_from_deck
 
@@ -102,7 +93,7 @@ RSpec.describe Turn do
 
   describe "#discard" do
     it "requires a draw first" do
-      turn = Turn.new(player: player, deck: deck, discard_pile: discard_pile)
+      turn = Turn.new(player: player, deck: deck, discard_pile: discard_pile, state: state)
 
       expect {
         turn.discard(card)
@@ -110,7 +101,7 @@ RSpec.describe Turn do
     end
 
     it "adds card to discard pile and removes it from hand" do
-      turn = Turn.new(player: player, deck: deck, discard_pile: discard_pile)
+      turn = Turn.new(player: player, deck: deck, discard_pile: discard_pile, state: state)
 
       turn.draw_from_deck
       turn.discard(card)
@@ -120,7 +111,7 @@ RSpec.describe Turn do
     end
 
     it "prevents multiple discards" do
-      turn = Turn.new(player: player, deck: deck, discard_pile: discard_pile)
+      turn = Turn.new(player: player, deck: deck, discard_pile: discard_pile, state: state)
 
       turn.draw_from_deck
       turn.discard(card)
@@ -133,13 +124,13 @@ RSpec.describe Turn do
 
   describe "#complete?" do
     it "is false at start" do
-      turn = Turn.new(player: player, deck: deck, discard_pile: discard_pile)
+      turn = Turn.new(player: player, deck: deck, discard_pile: discard_pile, state: state)
 
       expect(turn.complete?).to eq(false)
     end
 
     it "is false after only drawing" do
-      turn = Turn.new(player: player, deck: deck, discard_pile: discard_pile)
+      turn = Turn.new(player: player, deck: deck, discard_pile: discard_pile, state: state)
 
       turn.draw_from_deck
 
@@ -147,7 +138,7 @@ RSpec.describe Turn do
     end
 
     it "is true after draw and discard" do
-      turn = Turn.new(player: player, deck: deck, discard_pile: discard_pile)
+      turn = Turn.new(player: player, deck: deck, discard_pile: discard_pile, state: state)
 
       turn.draw_from_deck
       turn.discard(card)
