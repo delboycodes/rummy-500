@@ -14,6 +14,15 @@ class Meld
     @cards.dup
   end
 
+  def ==(other)
+    other.is_a?(Meld) && cards == other.cards
+  end
+  alias_method :eql?, :==
+
+  def hash
+    cards.hash
+  end
+
   private
 
   def set?

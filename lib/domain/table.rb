@@ -11,13 +11,13 @@ class Table
     @melds << clone_meld(meld)
   end
 
-  def layoff(input_cards)
-    cards = Array(input_cards)
 
+  def layoff(input_cards, target_meld: nil)
+    cards = Array(input_cards)
     return false if cards.empty?
 
-    target = find_layoff_target(cards)
-    return false unless target
+    target = target_meld || find_layoff_target(cards)
+    return false unless target && @melds.include?(target)
 
     new_cards = target.cards + cards
     new_meld = Meld.new(new_cards)
@@ -28,7 +28,7 @@ class Table
     @melds << clone_meld(new_meld)
 
     true
-	end
+  end
 
   def melds
     @melds.dup

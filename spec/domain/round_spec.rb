@@ -4,6 +4,7 @@ require "domain/card"
 require "domain/deck"
 require "domain/table"
 require "domain/turn"
+require "domain/meld"
 
 RSpec.describe Round do
   def player(name)
@@ -211,6 +212,37 @@ RSpec.describe Round do
       round.current_player.hand.add(bad_card)
 
       expect(round.layoff([bad_card])).to eq(false)
+    end
+  end
+
+  describe "#layoff to specific target" do
+    let(:round) { started_round }
+    let(:set_meld) { Meld.new([Card.new("7", "♠"), Card.new("7", "♥"), Card.new("7", "♦")]) }
+    let(:run_meld) { Meld.new([Card.new("5", "♣"), Card.new("6", "♣"), Card.new("7", "♣")]) }
+
+    before do
+      round.current_turn.draw_from_deck
+      round.table.add_meld(set_meld)
+      round.table.add_meld(run_meld)
+    end
+
+    it "successfully lays off a card onto a specific target meld" do
+      layoff_card = Card.new("8", "♣")
+      round.current_player.hand.add(layoff_card)
+
+      expect(round.layoff(layoff_card, target_meld: run_meld)).to eq(true)
+
+      updated_run_meld = round.table.melds.find { |m| m.cards.include?(layoff_card) }
+      expect(updated_run_meld.cards.size).to eq(4)
+      expect(round.current_player.hand.cards).not_to include(layoff_card)
+    end
+
+    it "returns false and does not remove the card from hand if it is an invalid layoff for that target" do
+      invalid_card = Card.new("K", "♦")
+      round.current_player.hand.add(invalid_card)
+
+      expect(round.layoff(invalid_card, target_meld: set_meld)).to eq(false)
+      expect(round.current_player.hand.cards).to include(invalid_card)
     end
   end
 

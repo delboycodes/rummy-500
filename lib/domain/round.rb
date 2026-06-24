@@ -52,13 +52,13 @@ class Round
     meld
   end
 
-  def layoff(cards)
+  def layoff(cards, target_meld: nil)
     raise TurnError, "Must draw first" unless current_turn&.drawn?
 
-    success = table.layoff(cards)
+    success = table.layoff(cards, target_meld: target_meld)
     return false unless success
 
-    current_player.hand.remove_cards(cards)
+    current_player.hand.remove_cards(Array(cards))
     true
   end
 
