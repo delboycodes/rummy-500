@@ -47,19 +47,21 @@ class Round
     meld = Meld.new(cards)
     raise ArgumentError, "Invalid meld" unless meld.valid?
 
+    @table.add_meld(meld, player: current_player)
     current_player.hand.remove_cards(cards)
-    table.add_meld(meld)
-    meld
   end
 
   def layoff(cards, target_meld: nil)
     raise TurnError, "Must draw first" unless current_turn&.drawn?
 
-    success = table.layoff(cards, target_meld: target_meld)
-    return false unless success
+    cards_array = Array(cards)
+    success = @table.layoff(cards_array, target_meld: target_meld)
 
-    current_player.hand.remove_cards(Array(cards))
-    true
+    if success
+      current_player.hand.remove_cards(cards_array)
+    end
+
+    success
   end
 
   def completed?

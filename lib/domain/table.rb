@@ -2,52 +2,65 @@ require "domain/meld"
 
 class Table
   def initialize
-    @melds = []
+    @melds_by_player = Hash.new { |hash, key| hash[key] = [] }
   end
 
-  def add_meld(meld)
+  def add_meld(meld, player:)
     raise ArgumentError, "Invalid meld" unless meld.valid?
 
-    @melds << clone_meld(meld)
+    @melds_by_player[player] << clone_meld(meld)
   end
-
 
   def layoff(input_cards, target_meld: nil)
     cards = Array(input_cards)
     return false if cards.empty?
 
-    target = target_meld || find_layoff_target(cards)
-    return false unless target && @melds.include?(target)
+    target_meld ||= find_layoff_target(cards)
+    return false unless target_meld
 
-    new_cards = target.cards + cards
-    new_meld = Meld.new(new_cards)
+    owner = find_owner_of(target_meld)
+    return false unless owner
 
-    return false unless new_meld.valid?
+    extended_meld = Meld.new(target_meld.cards + cards)
+    return false unless extended_meld.valid?
 
-    @melds.delete(target)
-    @melds << clone_meld(new_meld)
-
+    update_player_meld(owner, old_meld: target_meld, new_meld: extended_meld)
     true
   end
 
-  def melds
-    @melds.dup
+  def melds_for(player)
+    @melds_by_player[player].dup
+  end
+
+  def all_melds
+    @melds_by_player.values.flatten
   end
 
   def size
-    @melds.size
+    all_melds.size
   end
 
   def empty?
-    @melds.empty?
+    all_melds.empty?
   end
 
   private
 
   def find_layoff_target(cards)
-    @melds.find do |meld|
+    all_melds.find do |meld|
       Meld.new(meld.cards + cards).valid?
     end
+  end
+
+  def find_owner_of(meld)
+    @melds_by_player.keys.find do |player|
+      @melds_by_player[player].include?(meld)
+    end
+  end
+
+  def update_player_meld(player, old_meld:, new_meld:)
+    @melds_by_player[player].delete(old_meld)
+    @melds_by_player[player] << clone_meld(new_meld)
   end
 
   def clone_meld(meld)

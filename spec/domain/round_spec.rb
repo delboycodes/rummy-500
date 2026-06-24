@@ -146,7 +146,7 @@ RSpec.describe Round do
     it "stores the meld on the table" do
       round.play_meld(meld_cards)
 
-      expect(round.table.melds.first.cards)
+      expect(round.table.all_melds.first.cards)
         .to contain_exactly(*meld_cards)
     end
 
@@ -194,7 +194,7 @@ RSpec.describe Round do
     it "adds card to existing meld via table" do
       expect {
         round.layoff([layoff_card])
-      }.to change { round.table.melds.first.cards.size }.by(1)
+      }.to change { round.table.all_melds.first.cards.size }.by(1)
     end
 
     it "removes card from player's hand when successful" do
@@ -222,8 +222,8 @@ RSpec.describe Round do
 
     before do
       round.current_turn.draw_from_deck
-      round.table.add_meld(set_meld)
-      round.table.add_meld(run_meld)
+      round.table.add_meld(set_meld, player: round.current_player)
+      round.table.add_meld(run_meld, player: round.current_player)
     end
 
     it "successfully lays off a card onto a specific target meld" do
@@ -232,7 +232,7 @@ RSpec.describe Round do
 
       expect(round.layoff(layoff_card, target_meld: run_meld)).to eq(true)
 
-      updated_run_meld = round.table.melds.find { |m| m.cards.include?(layoff_card) }
+      updated_run_meld = round.table.all_melds.find { |m| m.cards.include?(layoff_card) }
       expect(updated_run_meld.cards.size).to eq(4)
       expect(round.current_player.hand.cards).not_to include(layoff_card)
     end
