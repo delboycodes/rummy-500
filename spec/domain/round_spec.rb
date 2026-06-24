@@ -312,4 +312,21 @@ RSpec.describe Round do
       }.to raise_error(ArgumentError)
     end
   end
+
+  describe "#completed?" do
+    let(:round) { started_round }
+
+    it "returns false when all players still have cards in hand" do
+      expect(round.completed?).to eq(false)
+    end
+
+    it "returns true when a player empties their hand entirely" do
+      round.current_turn.draw_from_deck
+      player = round.current_player
+
+      player.hand.cards.dup.each { |c| player.hand.remove_cards([c]) }
+
+      expect(round.completed?).to eq(true)
+    end
+  end
 end

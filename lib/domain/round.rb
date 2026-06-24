@@ -62,6 +62,10 @@ class Round
     true
   end
 
+  def completed?
+    players.any? { |player| player.hand.cards.empty? }
+  end
+
   private
 
   def start_turn
