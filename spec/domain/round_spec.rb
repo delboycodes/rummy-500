@@ -135,12 +135,10 @@ RSpec.describe Round do
       }.to change { round.table.size }.by(1)
     end
 
-    it "removes melded cards from player's hand" do
+    it "removes melded cards from the player's hand" do
+      initial_hand_size = round.current_player.hand.size
       round.play_meld(meld_cards)
-
-      meld_cards.each do |card|
-        expect(round.current_player.hand.cards).not_to include(card)
-      end
+      expect(round.current_player.hand.size).to eq(initial_hand_size - meld_cards.size)
     end
 
     it "stores the meld on the table" do
@@ -197,10 +195,12 @@ RSpec.describe Round do
       }.to change { round.table.all_melds.first.cards.size }.by(1)
     end
 
-    it "removes card from player's hand when successful" do
+    it "removes the card from the player's hand when the layoff succeeds" do
+      initial_size = round.current_player.hand.size
+
       round.layoff([layoff_card])
 
-      expect(round.current_player.hand.cards).not_to include(layoff_card)
+      expect(round.current_player.hand.size).to eq(initial_size - 1)
     end
 
     it "returns true when successful" do
@@ -226,14 +226,23 @@ RSpec.describe Round do
       round.table.add_meld(run_meld, player: round.current_player)
     end
 
-    it "successfully lays off a card onto a specific target meld" do
+    it "adds the card to the target meld" do
       layoff_card = Card.new("8", "♣")
       round.current_player.hand.add(layoff_card)
 
-      expect(round.layoff(layoff_card, target_meld: run_meld)).to eq(true)
+      round.layoff(layoff_card, target_meld: run_meld)
 
       updated_run_meld = round.table.all_melds.find { |m| m.cards.include?(layoff_card) }
+
       expect(updated_run_meld.cards.size).to eq(4)
+    end
+
+    it "removes the card from the player's hand" do
+      layoff_card = Card.new("8", "♣")
+      round.current_player.hand.add(layoff_card)
+
+      round.layoff(layoff_card, target_meld: run_meld)
+
       expect(round.current_player.hand.cards).not_to include(layoff_card)
     end
 
@@ -327,6 +336,63 @@ RSpec.describe Round do
       player.hand.cards.dup.each { |c| player.hand.remove_cards([c]) }
 
       expect(round.completed?).to eq(true)
+    end
+  end
+
+  describe "discard pile draw enforcement" do
+    let(:round) { started_round }
+    let(:target) { Card.new("7", "♣") }
+
+    def draw_from_discard
+      round.discard_pile << target
+      round.current_turn.draw_from_discard(target)
+    end
+
+    def discard_any_card
+      round.current_turn.discard(round.current_player.hand.cards.first)
+    end
+
+    it "requires a meld if a card is drawn from the discard pile" do
+      draw_from_discard
+      discard_any_card
+
+      expect {
+        round.end_turn
+      }.to raise_error(
+        TurnError,
+        "Card drawn from discard pile must be played in a meld this turn"
+      )
+    end
+
+    it "allows turn completion when the drawn discard card is used in a meld" do
+      draw_from_discard
+
+      set_cards = [
+        Card.new("7", "♠"),
+        Card.new("7", "♥"),
+        Card.new("7", "♦")
+      ]
+
+      set_cards.each { |card| round.current_player.hand.add(card) }
+
+      round.play_meld(set_cards + [target])
+
+      discard_any_card
+
+      expect { round.end_turn }.not_to raise_error
+    end
+
+    it "does not require a meld when drawing from the deck" do
+      round.current_turn.draw_from_deck
+      discard_any_card
+
+      expect { round.end_turn }.not_to raise_error
+    end
+
+    it "tracks the card drawn from the discard pile" do
+      draw_from_discard
+
+      expect(round.current_turn.cards_drawn_from_discard.last).to eq(target)
     end
   end
 end

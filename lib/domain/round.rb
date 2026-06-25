@@ -36,6 +36,7 @@ class Round
 
   def end_turn
     ensure_turn_complete!
+    ensure_discard_draw_was_melded!
 
     @current_index = (@current_index + 1) % players.size
     start_turn
@@ -76,6 +77,15 @@ class Round
       deck: deck,
       discard_pile: discard_pile
     )
+  end
+
+  def ensure_discard_draw_was_melded!
+    return unless current_turn.cards_drawn_from_discard
+
+    target    = current_turn.cards_drawn_from_discard.last
+    was_melded = table.all_melds.any? { |meld| meld.cards.include?(target) }
+
+    raise TurnError, "Card drawn from discard pile must be played in a meld this turn" unless was_melded
   end
 
   def ensure_turn_complete!
