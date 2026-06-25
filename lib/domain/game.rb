@@ -5,7 +5,7 @@ class Game
 
   def initialize(players)
     @players = players
-    @scores = players.each_with_object({}) { |player, hash| hash[player.name] = 0 }
+    @scores = players.each_with_object({}) { |p, hash| hash[p.name] = 0 }
   end
 
   def accumulate_scores(round_scores)
