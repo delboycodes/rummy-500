@@ -17,6 +17,19 @@ Play Rummy 500 against a simple CPU opponent in the terminal.
 ### Win Condition
 The objective is to be the first player to reach **500 points** across multiple rounds.
 
+### Core Turn Mechanics & Lifecycle
+
+Every player’s turn moves through a set of steps in order:
+1. **The Draw:** A player must start their turn by drawing. They have two distinct options:
+   * **Draw from Deck:** Draw the single top card from the face-down stockpile.
+   * **Deep Draw from Discard:** Pick up a specific target card from anywhere inside the face-up discard pile. Doing so forces the player to take **that target card plus every single card sitting on top of it**.
+2. **Action Phase (Optional):** After drawing, the player may lay down new valid melds or lay off individual cards onto existing melds on the table.
+3. **The Discard:** A player ends their turn by placing a single card from their hand face-up onto the top of the discard pile.
+
+### Critical Turn Rule Guards
+* **The Deep Draw Requirement:** If a player uses a *Deep Draw from Discard*, they face a strict penalty guard. They **must immediately play the deepest card drawn (the target card) into a valid meld or layoff on the table during that exact turn**. The other cards swept up into their hand along with it can be held for future turns. Failure to play the target card results in an illegal move validation error.
+* **The Discard Loop Prevention:** A player cannot draw a single top card from the discard pile and immediately discard that exact same card back onto the pile during the same turn.
+
 ### Round Completion Rule
 A single round ends immediately when:
 1. **Hand Exhaustion:** A player successfully plays or lays off every single card in their hand.
@@ -78,13 +91,14 @@ bundle exec rspec
 ## 🚀 Features (WIP)
 
 - [x] Deck shuffling and drawing
-- [x] Player hands
-- [x] Turn-based turn engine lifecycle
-- [x] Meld validation system (sets & runs)
+- [x] Player hands with identity-safe card removal
+- [x] Turn-based turn engine lifecycle with explicit guards
+- [x] Meld validation system supporting high and low Ace sequences (`A-2-3` and `Q-K-A`)
 - [x] Core table layoff orchestration rules
-- [ ] Round completion detection (Hand exhaustion)
-- [ ] Scoring engine (Rummy 500 rules)
-- [ ] Win condition management (500 points)
+- [x] Deep discard pile drawing mechanics with instant melding requirements
+- [x] Round completion detection via hand exhaustion
+- [x] Scoring engine computing combined table gains and hand penalties
+- [x] Win condition management tracking scores across multiple rounds to 500 points
 - [ ] Terminal CLI UI layer separation
 
 ---
