@@ -77,6 +77,28 @@ RSpec.describe Hand do
         "Card not in hand"
       )
     end
+
+    describe "duplicate cards" do
+      it "removes only one instance of a duplicate card, not both" do
+        seven_spades_a = Card.new("7", "♠")
+        seven_spades_b = Card.new("7", "♠")
+        hand = Hand.new([seven_spades_a, seven_spades_b])
+
+        hand.remove_cards([seven_spades_a])
+
+        expect(hand.size).to eq(1)
+      end
+
+      it "can remove both duplicate cards when both are specified" do
+        seven_spades_a = Card.new("7", "♠")
+        seven_spades_b = Card.new("7", "♠")
+        hand = Hand.new([seven_spades_a, seven_spades_b])
+
+        hand.remove_cards([seven_spades_a, seven_spades_b])
+
+        expect(hand).to be_empty
+      end
+    end
   end
 
   describe "#play_meld" do

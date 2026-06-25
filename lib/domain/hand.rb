@@ -24,7 +24,8 @@ class Hand
     end
 
     cards.each do |card|
-      @cards.delete(card)
+      match_index = @cards.find_index { |c| c == card }
+      @cards.delete_at(match_index) if match_index
     end
   end
 
