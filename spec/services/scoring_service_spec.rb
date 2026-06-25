@@ -1,69 +1,111 @@
 require "services/scoring_service"
 require "domain/card"
-require "domain/hand"
 require "domain/meld"
 require "domain/table"
 require "domain/player"
 
 RSpec.describe ScoringService do
+  def build_player(name)
+    Player.new(name)
+  end
+
+  def card(rank, suit)
+    Card.new(rank, suit)
+  end
+
   describe ".calculate_round_score" do
-    let(:table) { Table.new }
+    let(:table)  { Table.new }
     let(:player) { Player.new("Linnie") }
 
-    it "adds positive points for melded cards and subtracts negative points for unmelded cards" do
-      meld = Meld.new([Card.new("7", "♠"), Card.new("7", "♥"), Card.new("7", "♦")])
-      table.add_meld(meld, player: player)
-
-      player.hand.add(Card.new("K", "♣"))
-      player.hand.add(Card.new("3", "♠"))
-
-      # Net score: (7 + 7 + 7) - (10 + 3) = 21 - 13 = 8
-      net_score = ScoringService.calculate_round_score(player: player, table: table)
-      expect(net_score).to eq(8)
-    end
-
-    it "correctly values Aces as 15 points and face cards as 10 points" do
-      meld = Meld.new([Card.new("Q", "♠"), Card.new("K", "♠"), Card.new("A", "♠")])
-      table.add_meld(meld, player: player)
-
-      player.hand.add(Card.new("A", "♦"))
-
-      # Net score: (10 + 10 + 15) - (15) = 35 - 15 = 20
-      net_score = ScoringService.calculate_round_score(player: player, table: table)
-      expect(net_score).to eq(20)
-    end
-
-    it "can return a negative net score if caught with heavy cards" do
-      player.hand.add(Card.new("A", "♣"))
-      player.hand.add(Card.new("J", "♥"))
-
-      # Net score: 0 - (15 + 10) = -25
-      net_score = ScoringService.calculate_round_score(player: player, table: table)
-      expect(net_score).to eq(-25)
-    end
-
-    it "returns exactly 0 when meld points perfectly equal hand penalties" do
-      run = Meld.new([Card.new("2", "♥"), Card.new("3", "♥"), Card.new("4", "♥")])
-      table.add_meld(run, player: player)
-
-      player.hand.add(Card.new("9", "♣"))
-
-      # Net score: 9 - 9 = 0
-      net_score = ScoringService.calculate_round_score(player: player, table: table)
-      expect(net_score).to eq(0)
-    end
-
     it "returns 0 when the player has no melds and an empty hand" do
-      net_score = ScoringService.calculate_round_score(player: player, table: table)
-      expect(net_score).to eq(0)
+      expect(described_class.calculate_round_score(player: player, table: table)).to eq(0)
     end
 
-    it "correctly values the 10 card as 10 points instead of truncating it" do
-      player.hand.add(Card.new("10", "♠"))
+    it "adds meld points and subtracts hand penalties" do
+      table.add_meld(
+        Meld.new([
+          card("7", "♠"),
+          card("7", "♥"),
+          card("7", "♦")
+        ]),
+        player: player
+      )
 
-      # Net score: 0 - 10 = -10
-      net_score = ScoringService.calculate_round_score(player: player, table: table)
-      expect(net_score).to eq(-10)
+      player.hand.add(card("K", "♣"))
+      player.hand.add(card("3", "♠"))
+
+      expect(
+        described_class.calculate_round_score(player: player, table: table)
+      ).to eq(8)
+    end
+
+    it "values aces as 15 and face cards as 10" do
+      table.add_meld(
+        Meld.new([
+          card("Q", "♠"),
+          card("K", "♠"),
+          card("A", "♠")
+        ]),
+        player: player
+      )
+
+      player.hand.add(card("A", "♦"))
+
+      expect(
+        described_class.calculate_round_score(player: player, table: table)
+      ).to eq(20)
+    end
+
+    it "returns a negative score when hand penalties exceed meld points" do
+      player.hand.add(card("A", "♣"))
+      player.hand.add(card("J", "♥"))
+
+      expect(
+        described_class.calculate_round_score(player: player, table: table)
+      ).to eq(-25)
+    end
+
+    it "returns 0 when meld points equal hand penalties" do
+      table.add_meld(
+        Meld.new([
+          card("2", "♥"),
+          card("3", "♥"),
+          card("4", "♥")
+        ]),
+        player: player
+      )
+
+      player.hand.add(card("9", "♣"))
+
+      expect(
+        described_class.calculate_round_score(player: player, table: table)
+      ).to eq(0)
+    end
+
+    it "correctly scores the 10 card as 10 points" do
+      player.hand.add(card("10", "♠"))
+
+      expect(
+        described_class.calculate_round_score(player: player, table: table)
+      ).to eq(-10)
+    end
+
+    it "only scores melds belonging to the player" do
+      player1 = build_player("Linnie")
+      player2 = build_player("Jake")
+
+      table.add_meld(
+        Meld.new([
+          card("7", "♠"),
+          card("7", "♥"),
+          card("7", "♦")
+        ]),
+        player: player2
+      )
+
+      expect(
+        described_class.calculate_round_score(player: player1, table: table)
+      ).to eq(0)
     end
   end
 end
